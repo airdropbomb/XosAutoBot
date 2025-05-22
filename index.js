@@ -52,7 +52,7 @@ let walletInfo = {
   balanceBnb: "0.00",
   balanceJup: "0.00",
   balanceSol: "0.00",
-  network: NETWORK_NAME,
+  network拱: NETWORK_NAME,
   status: "Initializing"
 };
 
@@ -113,7 +113,7 @@ function clearTransactionLogs() {
   logsBox.setScroll(0);
   updateLogs();
   safeRender();
-  addLog("Transaction logs telah dihapus.", "system");
+  addLog("Transaction logs have been cleared.", "system");
 }
 
 function convertBigIntToString(obj) {
@@ -136,36 +136,36 @@ async function waitWithCancel(delay, type) {
   ]);
 }
 
-async function addTransactionToQueue(transactionFunction, description = "Transaksi") {
+async function addTransactionToQueue(transactionFunction, description = "Transaction") {
   const transactionId = ++transactionIdCounter;
-  transactionLogs.push(`Transaksi [${transactionId}] ditambahkan ke antrean: ${description}`);
+  transactionLogs.push(`Transaction [${transactionId}] added to queue: ${description}`);
   updateLogs();
 
   transactionQueue = transactionQueue.then(async () => {
     try {
       if (nextNonce === null) {
         nextNonce = await provider.getTransactionCount(globalWallet.address, "pending");
-        addLog(`Nonce awal: ${nextNonce}`, "debug");
+        addLog(`Initial nonce: ${nextNonce}`, "debug");
       }
       const tx = await transactionFunction(nextNonce);
       const txHash = tx.hash;
       const receipt = await tx.wait();
       nextNonce++;
       if (receipt.status === 1) {
-        addLog(`Transaksi [${transactionId}] Selesai. Hash: ${getShortHash(receipt.transactionHash || txHash)}`, "success");
+        addLog(`Transaction [${transactionId}] completed. Hash: ${getShortHash(receipt.transactionHash || txHash)}`, "success");
       } else {
-        addLog(`Transaksi [${transactionId}] gagal: Transaksi ditolak oleh kontrak.`, "error");
+        addLog(`Transaction [${transactionId}] failed: Transaction rejected by contract.`, "error");
       }
       return { receipt, txHash, tx };
     } catch (error) {
       let errorMessage = error.message;
       if (error.code === "CALL_EXCEPTION") {
-        errorMessage = `Transaksi ditolak oleh kontrak: ${error.reason || "Alasan tidak diketahui"}`;
+        errorMessage = `Transaction rejected by contract: ${error.reason || "Unknown reason"}`;
       }
-      addLog(`Transaksi [${transactionId}] gagal: ${errorMessage}`, "error");
+      addLog(`Transaction [${transactionId}] failed: ${errorMessage}`, "error");
       if (error.message.includes("nonce has already been used")) {
         nextNonce++;
-        addLog(`Nonce diincrement karena sudah digunakan. Nilai nonce baru: ${nextNonce}`, "system");
+        addLog(`Nonce incremented due to previous use. New nonce: ${nextNonce}`, "system");
       }
       return null;
     }
@@ -180,7 +180,7 @@ async function getTokenBalance(tokenAddress) {
     const decimals = await contract.decimals();
     return ethers.formatUnits(balance, decimals);
   } catch (error) {
-    addLog(`Gagal mengambil saldo token ${tokenAddress}: ${error.message}`, "error");
+    addLog(`Failed to fetch token balance ${tokenAddress}: ${error.message}`, "error");
     return "0";
   }
 }
@@ -190,7 +190,7 @@ async function estimateGasPrice() {
     const gasPrice = await provider.getFeeData();
     return gasPrice.gasPrice || ethers.parseUnits("5", "gwei");
   } catch (error) {
-    addLog(`Gagal mengambil harga gas: ${error.message}. Menggunakan default 5 gwei.`, "debug");
+    addLog(`Failed to fetch gas price: ${error.message}. Using default 5 gwei.`, "debug");
     return ethers.parseUnits("5", "gwei");
   }
 }
@@ -216,9 +216,9 @@ async function updateWalletData() {
     walletInfo.balanceJup = await getTokenBalance(JUP_ADDRESS);
     walletInfo.balanceSol = await getTokenBalance(SOL_ADDRESS);
     updateWallet();
-    addLog("Wallet Information Updated !!", "system");
+    addLog("Wallet information updated!", "system");
   } catch (error) {
-    addLog("Gagal mengambil data wallet: " + error.message, "system");
+    addLog("Failed to fetch wallet data: " + error.message, "system");
   }
 }
 
@@ -264,31 +264,31 @@ async function autoSwapXosWxos() {
       return false;
     }
 
-    addLog(`Melakukan Swap ${amount} XOS ➯ WXOS`, "swap");
+    addLog(`Performing swap ${amount} XOS ➯ WXOS`, "swap");
 
     let txParams = { value: amountWei, nonce: null, gasLimit: 80000 };
     try {
       const gasLimit = await wxosContract.estimateGas.deposit({ value: amountWei });
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk deposit: ${error.message}. Menggunakan gas default 80000.`, "debug");
+      addLog(`Gas estimation failed for deposit: ${error.message}. Using default gas 80000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await wxosContract.deposit(txParams);
-      addLog(`Tx Sent ${amount} XOS ➯ WXOS, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} XOS ➯ WXOS, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
     const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS to WXOS`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} XOS ➯ WXOS, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} XOS ➯ WXOS, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap XOS to WXOS. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap XOS to WXOS. Transaction may have failed or is pending.`, "error");
       return false;
     }
   } else {
@@ -298,31 +298,31 @@ async function autoSwapXosWxos() {
       return false;
     }
 
-    addLog(`Melakukan Swap ${amount} WXOS ➯ XOS`, "swap");
+    addLog(`Performing swap ${amount} WXOS ➯ XOS`, "swap");
 
     let txParams = { nonce: null, gasLimit: 80000 };
     try {
       const gasLimit = await wxosContract.estimateGas.withdraw(amountWei);
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk withdraw: ${error.message}. Menggunakan gas default 80000.`, "debug");
+      addLog(`Gas estimation failed for withdraw: ${error.message}. Using default gas 80000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await wxosContract.withdraw(amountWei, txParams);
-      addLog(`Tx Sent ${amount} WXOS ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} WXOS ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
     const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} WXOS to XOS`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} WXOS ➯ XOS, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} WXOS ➯ XOS, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap WXOS to XOS. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap WXOS to XOS. Transaction may have failed or is pending.`, "error");
       return false;
     }
   }
@@ -362,18 +362,18 @@ async function autoSwapXosUsdc() {
     const minUsdc = (parseFloat(expectedUsdc) * (1 - slippageTolerance)).toFixed(6);
     const amountOutMinimum = ethers.parseUnits(minUsdc, decimalsUsdc);
 
-    addLog(`Melakukan Swap ${amount} XOS ➯ USDC, Expected Output: ${expectedUsdc} USDC, Minimum: ${minUsdc} USDC`, "swap");
+    addLog(`Performing swap ${amount} XOS ➯ USDC, Expected output: ${expectedUsdc} USDC, Minimum: ${minUsdc} USDC`, "swap");
 
     const allowance = await wxosContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk WXOS`, "swap");
+      addLog(`Requesting approval for WXOS`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 80000 };
       try {
         const approveGasLimit = await wxosContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(120)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve WXOS: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for WXOS approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve WXOS: ${error.message}. Menggunakan gas default 80000.`, "debug");
+        addLog(`Gas estimation failed for WXOS approval: ${error.message}. Using default gas 80000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -383,10 +383,10 @@ async function autoSwapXosUsdc() {
       };
       const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS for ${amount} XOS`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk WXOS. Membatalkan swap.`, "error");
+        addLog(`Approval failed for WXOS. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk WXOS`, "swap");
+      addLog(`Approval successful for WXOS`, "swap");
     }
 
     const swapParams = {
@@ -407,30 +407,30 @@ async function autoSwapXosUsdc() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData, { value: amountWei });
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk swap: ${error.message}. Menggunakan gas default 150000.`, "debug");
+      addLog(`Gas estimation failed for swap: ${error.message}. Using default gas 150000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} XOS ➯ USDC, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} XOS ➯ USDC, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
     const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS to USDC`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} XOS ➯ USDC, Received: ${expectedUsdc} USDC, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} XOS ➯ USDC, Received: ${expectedUsdc} USDC, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap XOS to USDC. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap XOS to USDC. Transaction may have failed or is pending.`, "error");
       return false;
     }
   } else {
     const usdcBalance = await getTokenBalance(USDC_ADDRESS);
-    addLog(`Saldo USDC: ${usdcBalance}`, "debug");
+    addLog(`USDC balance: ${usdcBalance}`, "debug");
     if (parseFloat(usdcBalance) < parseFloat(amount)) {
       addLog(`Insufficient USDC balance: ${usdcBalance} < ${amount}`, "warning");
       return false;
@@ -441,16 +441,16 @@ async function autoSwapXosUsdc() {
     addLog(`Expected XOS: ${expectedXos}, Min XOS (ref): ${minXos}`, "debug");
   
     const allowance = await usdcContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
-    addLog(`Allowance USDC: ${ethers.formatUnits(allowance, decimalsUsdc)}`, "debug");
+    addLog(`USDC allowance: ${ethers.formatUnits(allowance, decimalsUsdc)}`, "debug");
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk ${amount} USDC`, "swap");
+      addLog(`Requesting approval for ${amount} USDC`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 100000 };
       try {
         const approveGasLimit = await usdcContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(130)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve USDC: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for USDC approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve USDC: ${error.message}. Gunakan default 100000.`, "debug");
+        addLog(`Gas estimation failed for USDC approval: ${error.message}. Using default gas 100000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -460,10 +460,10 @@ async function autoSwapXosUsdc() {
       };
       const approveResult = await addTransactionToQueue(approveTxFunction, `Approve ${amount} USDC`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk USDC. Membatalkan swap.`, "error");
+        addLog(`Approval failed for USDC. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk ${amount} USDC`, "swap");
+      addLog(`Approval successful for ${amount} USDC`, "swap");
     }
   
     const deadline = Math.floor(Date.now() / 1000) + 60 * 30; 
@@ -476,13 +476,13 @@ async function autoSwapXosUsdc() {
       amountOutMinimum: 0, 
       sqrtPriceLimitX96: 0
     };
-    addLog(`Swap Params USDC -> WXOS: ${JSON.stringify(convertBigIntToString(swapParams))}`, "debug");
+    addLog(`Swap params USDC -> WXOS: ${JSON.stringify(convertBigIntToString(swapParams))}`, "debug");
   
     const unwrapParams = {
       amountMinimum: 0,
       recipient: globalWallet.address 
     };
-    addLog(`Unwrap Params WXOS -> XOS: ${JSON.stringify(convertBigIntToString(unwrapParams))}`, "debug");
+    addLog(`Unwrap params WXOS -> XOS: ${JSON.stringify(convertBigIntToString(unwrapParams))}`, "debug");
   
     const swapInterface = new ethers.Interface(SWAP_ROUTER_ABI);
     const encodedSwapData = swapInterface.encodeFunctionData('exactInputSingle', [swapParams]);
@@ -493,33 +493,33 @@ async function autoSwapXosUsdc() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData);
       txParams.gasLimit = (gasLimit * BigInt(130)) / BigInt(100); 
-      addLog(`Estimasi gas untuk swap dan unwrap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap and unwrap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal: ${error.message}. Gunakan default 400000.`, "debug");
+      addLog(`Gas estimation failed: ${error.message}. Using default gas 400000.`, "debug");
     }
   
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} USDC ➯ XOS (via WXOS), Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} USDC ➯ XOS (via WXOS), Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
   
     const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} USDC to XOS`);
     if (!swapResult || !swapResult.receipt || swapResult.receipt.status !== 1) {
-      addLog(`Gagal swap USDC to XOS. Periksa log untuk detail.`, "error");
+      addLog(`Failed to swap USDC to XOS. Check logs for details.`, "error");
       return false;
     }
-    addLog(`Swap Berhasil ${amount} USDC ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
+    addLog(`Swap successful ${amount} USDC ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
   
     const xosBalanceAfterSwap = ethers.formatEther(await provider.getBalance(globalWallet.address));
-    addLog(`Saldo XOS setelah swap: ${xosBalanceAfterSwap}`, "debug");
+    addLog(`XOS balance after swap: ${xosBalanceAfterSwap}`, "debug");
     if (parseFloat(xosBalanceAfterSwap) <= 0) {
-      addLog(`Tidak ada XOS yang diterima setelah swap.`, "error");
+      addLog(`No XOS received after swap.`, "error");
       return false;
     }
   
-    addLog(`Swap Berhasil ${amount} USDC ➯ XOS, Received: ~${xosBalanceAfterSwap} XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
+    addLog(`Swap successful ${amount} USDC ➯ XOS, Received: ~${xosBalanceAfterSwap} XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
     return true;
   }
 }
@@ -557,18 +557,18 @@ async function autoSwapXosBnb() {
     const minBnb = (parseFloat(expectedBnb) * (1 - slippageTolerance)).toFixed(6);
     const amountOutMinimum = ethers.parseUnits(minBnb, decimalsBnb);
 
-    addLog(`Melakukan Swap ${amount} XOS ➯ BNB, Expected Output: ${expectedBnb} BNB, Minimum: ${minBnb} BNB`, "swap");
+    addLog(`Performing swap ${amount} XOS ➯ BNB, Expected output: ${expectedBnb} BNB, Minimum: ${minBnb} BNB`, "swap");
 
     const allowance = await wxosContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk WXOS`, "swap");
+      addLog(`Requesting approval for WXOS`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 80000 };
       try {
         const approveGasLimit = await wxosContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(120)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve WXOS: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for WXOS approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve WXOS: ${error.message}. Menggunakan gas default 80000.`, "debug");
+        addLog(`Gas estimation failed for WXOS approval: ${error.message}. Using default gas 80000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -576,12 +576,12 @@ async function autoSwapXosBnb() {
         addLog(`Approval transaction sent for WXOS`, "swap");
         return tx;
       };
-      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS untuk ${amount} XOS`);
+      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS for ${amount} XOS`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk WXOS. Membatalkan swap.`, "error");
+        addLog(`Approval failed for WXOS. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk WXOS`, "swap");
+      addLog(`Approval successful for WXOS`, "swap");
     }
 
     const swapParams = {
@@ -602,25 +602,25 @@ async function autoSwapXosBnb() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData, { value: amountWei });
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk swap: ${error.message}. Menggunakan gas default 150000.`, "debug");
+      addLog(`Gas estimation failed for swap: ${error.message}. Using default gas 150000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} XOS ➯ BNB, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} XOS ➯ BNB, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS ke BNB`);
+    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS to BNB`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} XOS ➯ BNB, Received: ${expectedBnb} BNB, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} XOS ➯ BNB, Received: ${expectedBnb} BNB, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap XOS ke BNB. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap XOS to BNB. Transaction may have failed or is pending.`, "error");
       return false;
     }
   } else { 
@@ -633,18 +633,18 @@ async function autoSwapXosBnb() {
     const expectedXos = (parseFloat(amount) * xosPerBnb).toFixed(6);
     const minXos = (parseFloat(expectedXos) * (1 - slippageTolerance)).toFixed(6);
 
-    addLog(`Melakukan Swap ${amount} BNB ➯ XOS, Expected Output: ${expectedXos} XOS`, "swap");
+    addLog(`Performing swap ${amount} BNB ➯ XOS, Expected output: ${expectedXos} XOS`, "swap");
 
     const allowance = await bnbContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk ${amount} BNB`, "swap");
+      addLog(`Requesting approval for ${amount} BNB`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 100000 };
       try {
         const approveGasLimit = await bnbContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(130)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve BNB: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for BNB approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve BNB: ${error.message}. Gunakan default 100000.`, "debug");
+        addLog(`Gas estimation failed for BNB approval: ${error.message}. Using default gas 100000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -654,10 +654,10 @@ async function autoSwapXosBnb() {
       };
       const approveResult = await addTransactionToQueue(approveTxFunction, `Approve ${amount} BNB`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk BNB. Membatalkan swap.`, "error");
+        addLog(`Approval failed for BNB. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk ${amount} BNB`, "swap");
+      addLog(`Approval successful for ${amount} BNB`, "swap");
     }
 
     const swapParams = {
@@ -684,25 +684,25 @@ async function autoSwapXosBnb() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData);
       txParams.gasLimit = (gasLimit * BigInt(130)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap dan unwrap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap and unwrap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal: ${error.message}. Gunakan default 400000.`, "debug");
+      addLog(`Gas estimation failed: ${error.message}. Using default gas 400000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} BNB ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} BNB ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} BNB ke XOS`);
+    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} BNB to XOS`);
     if (!swapResult || !swapResult.receipt || swapResult.receipt.status !== 1) {
-      addLog(`Gagal swap BNB ke XOS. Periksa log untuk detail.`, "error");
+      addLog(`Failed to swap BNB to XOS. Check logs for details.`, "error");
       return false;
     }
 
-    addLog(`Swap Berhasil ${amount} BNB ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
+    addLog(`Swap successful ${amount} BNB ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
     return true;
   }
 }
@@ -741,31 +741,31 @@ async function autoSwapXosSol() {
     const minSol = (parseFloat(expectedSol) * (1 - slippageTolerance)).toFixed(6);
     const amountOutMinimum = ethers.parseUnits(minSol, decimalsSol);
 
-    addLog(`Melakukan Swap ${amount} XOS ➯ SOL, Expected Output: ${expectedSol} SOL, Minimum: ${minSol} SOL`, "swap");
+    addLog(`Performing swap ${amount} XOS ➯ SOL, Expected output: ${expectedSol} SOL, Minimum: ${minSol} SOL`, "swap");
 
     const allowance = await wxosContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk WXOS`, "swap");
+      addLog(`Requesting approval for WXOS`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 80000 };
       try {
         const approveGasLimit = await wxosContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(120)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve WXOS: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for WXOS approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve WXOS: ${error.message}. Menggunakan gas default 80000.`, "debug");
+        addLog(`Gas estimation failed for WXOS approval: ${error.message}. Using default gas 80000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
-        const tx = await wxosContract.approve(SWAP_ROUTER_ADDRESS, amountWei, approveTxParams);
+        const tx = await wxosContract.approve(SW trouvées, amountWei, approveTxParams);
         addLog(`Approval transaction sent for WXOS`, "swap");
         return tx;
       };
-      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS untuk ${amount} XOS`);
+      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS for ${amount} XOS`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk WXOS. Membatalkan swap.`, "error");
+        addLog(`Approval failed for WXOS. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk WXOS`, "swap");
+      addLog(`Approval successful for WXOS`, "swap");
     }
 
     const swapParams = {
@@ -786,25 +786,25 @@ async function autoSwapXosSol() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData, { value: amountWei });
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk swap: ${error.message}. Menggunakan gas default 150000.`, "debug");
+      addLog(`Gas estimation failed for swap: ${error.message}. Using default gas 150000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} XOS ➯ SOL, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} XOS ➯ SOL, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS ke SOL`);
+    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS to SOL`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} XOS ➯ SOL, Received: ${expectedSol} SOL, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} XOS ➯ SOL, Received: ${expectedSol} SOL, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap XOS ke SOL. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap XOS to SOL. Transaction may have failed or is pending.`, "error");
       return false;
     }
   } else { 
@@ -817,18 +817,18 @@ async function autoSwapXosSol() {
     const expectedXos = (parseFloat(amount) * xosPerSol).toFixed(6);
     const minXos = (parseFloat(expectedXos) * (1 - slippageTolerance)).toFixed(6);
 
-    addLog(`Melakukan Swap ${amount} SOL ➯ XOS, Expected Output: ${expectedXos} XOS`, "swap");
+    addLog(`Performing swap ${amount} SOL ➯ XOS, Expected output: ${expectedXos} XOS`, "swap");
 
     const allowance = await solContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk ${amount} SOL`, "swap");
+      addLog(`Requesting approval for ${amount} SOL`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 100000 };
       try {
         const approveGasLimit = await solContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(130)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve SOL: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for SOL approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve SOL: ${error.message}. Gunakan default 100000.`, "debug");
+        addLog(`Gas estimation failed for SOL approval: ${error.message}. Using default gas 100000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -838,10 +838,10 @@ async function autoSwapXosSol() {
       };
       const approveResult = await addTransactionToQueue(approveTxFunction, `Approve ${amount} SOL`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk SOL. Membatalkan swap.`, "error");
+        addLog(`Approval failed for SOL. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk ${amount} SOL`, "swap");
+      addLog(`Approval successful for ${amount} SOL`, "swap");
     }
 
     const swapParams = {
@@ -868,25 +868,25 @@ async function autoSwapXosSol() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData);
       txParams.gasLimit = (gasLimit * BigInt(130)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap dan unwrap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap and unwrap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal: ${error.message}. Gunakan default 400000.`, "debug");
+      addLog(`Gas estimation failed: ${error.message}. Using default gas 400000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} SOL ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} SOL ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} SOL ke XOS`);
+    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} SOL to XOS`);
     if (!swapResult || !swapResult.receipt || swapResult.receipt.status !== 1) {
-      addLog(`Gagal swap SOL ke XOS. Periksa log untuk detail.`, "error");
+      addLog(`Failed to swap SOL to XOS. Check logs for details.`, "error");
       return false;
     }
 
-    addLog(`Swap Berhasil ${amount} SOL ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
+    addLog(`Swap successful ${amount} SOL ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
     return true;
   }
 }
@@ -925,18 +925,18 @@ async function autoSwapXosJup() {
     const minJup = (parseFloat(expectedJup) * (1 - slippageTolerance)).toFixed(6);
     const amountOutMinimum = ethers.parseUnits(minJup, decimalsJup);
 
-    addLog(`Melakukan Swap ${amount} XOS ➯ JUP, Expected Output: ${expectedJup} JUP, Minimum: ${minJup} JUP`, "swap");
+    addLog(`Performing swap ${amount} XOS ➯ JUP, Expected output: ${expectedJup} JUP, Minimum: ${minJup} JUP`, "swap");
 
     const allowance = await wxosContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk WXOS`, "swap");
+      addLog(`Requesting approval for WXOS`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 80000 };
       try {
         const approveGasLimit = await wxosContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(120)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve WXOS: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for WXOS approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve WXOS: ${error.message}. Menggunakan gas default 80000.`, "debug");
+        addLog(`Gas estimation failed for WXOS approval: ${error.message}. Using default gas 80000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -944,12 +944,12 @@ async function autoSwapXosJup() {
         addLog(`Approval transaction sent for WXOS`, "swap");
         return tx;
       };
-      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS untuk ${amount} XOS`);
+      const approveResult = await addTransactionToQueue(approveTxFunction, `Approve WXOS for ${amount} XOS`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk WXOS. Membatalkan swap.`, "error");
+        addLog(`Approval failed for WXOS. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk WXOS`, "swap");
+      addLog(`Approval successful for WXOS`, "swap");
     }
 
     const swapParams = {
@@ -970,25 +970,25 @@ async function autoSwapXosJup() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData, { value: amountWei });
       txParams.gasLimit = (gasLimit * BigInt(120)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal untuk swap: ${error.message}. Menggunakan gas default 150000.`, "debug");
+      addLog(`Gas estimation failed for swap: ${error.message}. Using default gas 150000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} XOS ➯ JUP, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} XOS ➯ JUP, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS ke JUP`);
+    const result = await addTransactionToQueue(swapTxFunction, `Swap ${amount} XOS to JUP`);
 
     if (result && result.receipt && result.receipt.status === 1) {
-      addLog(`Swap Berhasil ${amount} XOS ➯ JUP, Received: ${expectedJup} JUP, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
+      addLog(`Swap successful ${amount} XOS ➯ JUP, Received: ${expectedJup} JUP, Hash: ${getShortHash(result.receipt.transactionHash || result.txHash)}`, "success");
       return true;
     } else {
-      addLog(`Gagal swap XOS ke JUP. Transaksi mungkin gagal atau tertunda.`, "error");
+      addLog(`Failed to swap XOS to JUP. Transaction may have failed or is pending.`, "error");
       return false;
     }
   } else { 
@@ -1001,18 +1001,18 @@ async function autoSwapXosJup() {
     const expectedXos = (parseFloat(amount) * xosPerJup).toFixed(6);
     const minXos = (parseFloat(expectedXos) * (1 - slippageTolerance)).toFixed(6);
 
-    addLog(`Melakukan Swap ${amount} JUP ➯ XOS, Expected Output: ${expectedXos} XOS`, "swap");
+    addLog(`Performing swap ${amount} JUP ➯ XOS, Expected output: ${expectedXos} XOS`, "swap");
 
     const allowance = await jupContract.allowance(globalWallet.address, SWAP_ROUTER_ADDRESS);
     if (allowance < amountWei) {
-      addLog(`Requesting Approval untuk ${amount} JUP`, "swap");
+      addLog(`Requesting approval for ${amount} JUP`, "swap");
       let approveTxParams = { nonce: null, gasLimit: 100000 };
       try {
         const approveGasLimit = await jupContract.estimateGas.approve(SWAP_ROUTER_ADDRESS, amountWei);
         approveTxParams.gasLimit = (approveGasLimit * BigInt(130)) / BigInt(100);
-        addLog(`Estimasi gas untuk approve JUP: ${approveTxParams.gasLimit}`, "debug");
+        addLog(`Gas estimate for JUP approval: ${approveTxParams.gasLimit}`, "debug");
       } catch (error) {
-        addLog(`Gas estimasi gagal untuk approve JUP: ${error.message}. Gunakan default 100000.`, "debug");
+        addLog(`Gas estimation failed for JUP approval: ${error.message}. Using default gas 100000.`, "debug");
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
@@ -1022,10 +1022,10 @@ async function autoSwapXosJup() {
       };
       const approveResult = await addTransactionToQueue(approveTxFunction, `Approve ${amount} JUP`);
       if (!approveResult || !approveResult.receipt || approveResult.receipt.status !== 1) {
-        addLog(`Approval gagal untuk JUP. Membatalkan swap.`, "error");
+        addLog(`Approval failed for JUP. Cancelling swap.`, "error");
         return false;
       }
-      addLog(`Approval Berhasil untuk ${amount} JUP`, "swap");
+      addLog(`Approval successful for ${amount} JUP`, "swap");
     }
 
     const swapParams = {
@@ -1052,44 +1052,44 @@ async function autoSwapXosJup() {
     try {
       const gasLimit = await swapRouterContract.estimateGas.multicall(deadline, multicallData);
       txParams.gasLimit = (gasLimit * BigInt(130)) / BigInt(100);
-      addLog(`Estimasi gas untuk swap dan unwrap: ${txParams.gasLimit}`, "debug");
+      addLog(`Gas estimate for swap and unwrap: ${txParams.gasLimit}`, "debug");
     } catch (error) {
-      addLog(`Gas estimasi gagal: ${error.message}. Gunakan default 400000.`, "debug");
+      addLog(`Gas estimation failed: ${error.message}. Using default gas 400000.`, "debug");
     }
 
     const swapTxFunction = async (nonce) => {
       txParams.nonce = nonce;
       const tx = await swapRouterContract.multicall(deadline, multicallData, txParams);
-      addLog(`Tx Sent ${amount} JUP ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
+      addLog(`Tx sent ${amount} JUP ➯ XOS, Hash: ${getShortHash(tx.hash)}`, "swap");
       return tx;
     };
 
-    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} JUP ke XOS`);
+    const swapResult = await addTransactionToQueue(swapTxFunction, `Swap ${amount} JUP to XOS`);
     if (!swapResult || !swapResult.receipt || swapResult.receipt.status !== 1) {
-      addLog(`Gagal swap JUP ke XOS. Periksa log untuk detail.`, "error");
+      addLog(`Failed to swap JUP to XOS. Check logs for details.`, "error");
       return false;
     }
 
-    addLog(`Swap Berhasil ${amount} JUP ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
+    addLog(`Swap successful ${amount} JUP ➯ XOS, Hash: ${getShortHash(swapResult.receipt.transactionHash || swapResult.txHash)}`, "success");
     return true;
   }
 }
 
 async function runAutoSwap(pair, autoSwapFunction, lastSwapDirection) {
   promptBox.setFront();
-  promptBox.readInput(`Masukkan jumlah swap untuk ${pair}`, "", async (err, value) => {
+  promptBox.readInput(`Enter the number of swaps for ${pair}`, "", async (err, value) => {
     promptBox.hide();
     safeRender();
     if (err || !value) {
-      addLog(`XOS Dex: Input tidak valid atau dibatalkan untuk ${pair}.`, "swap");
+      addLog(`XOS Dex: Invalid or cancelled input for ${pair}.`, "swap");
       return;
     }
     const loopCount = parseInt(value);
     if (isNaN(loopCount)) {
-      addLog(`XOS Dex: Input harus berupa angka untuk ${pair}.`, "swap");
+      addLog(`XOS Dex: Input must be a number for ${pair}.`, "swap");
       return;
     }
-    addLog(`XOS Dex: Mulai ${loopCount} iterasi swap untuk ${pair}.`, "swap");
+    addLog(`XOS Dex: Starting ${loopCount} swap iterations for ${pair}.`, "swap");
 
     swapRunning = true;
     swapCancelled = false;
@@ -1100,10 +1100,10 @@ async function runAutoSwap(pair, autoSwapFunction, lastSwapDirection) {
 
     for (let i = 1; i <= loopCount; i++) {
       if (swapCancelled) {
-        addLog(`XOS Dex: Auto Swap ${pair} Dihentikan pada Cycle ${i}.`, "swap");
+        addLog(`XOS Dex: Auto swap ${pair} stopped at cycle ${i}.`, "swap");
         break;
       }
-      addLog(`Memulai swap ke-${i} untuk ${pair}: Arah ${lastSwapDirection === "XOS_TO_TOKEN" ? "TOKEN_TO_XOS" : "XOS_TO_TOKEN"}`, "swap");
+      addLog(`Starting swap ${i} for ${pair}: Direction ${lastSwapDirection === "XOS_TO_TOKEN" ? "TOKEN_TO_XOS" : "XOS_TO_TOKEN"}`, "swap");
       const success = await autoSwapFunction();
       if (success) {
         await updateWalletData();
@@ -1112,10 +1112,10 @@ async function runAutoSwap(pair, autoSwapFunction, lastSwapDirection) {
         const delayTime = getRandomDelay();
         const minutes = Math.floor(delayTime / 60000);
         const seconds = Math.floor((delayTime % 60000) / 1000);
-        addLog(`Swap ke-${i} untuk ${pair} selesai. Menunggu ${minutes} menit ${seconds} detik.`, "swap");
+        addLog(`Swap ${i} for ${pair} completed. Waiting ${minutes} minutes ${seconds} seconds.`, "swap");
         await waitWithCancel(delayTime, "swap");
         if (swapCancelled) {
-          addLog(`XOS Dex: Dihentikan saat periode tunggu untuk ${pair}.`, "swap");
+          addLog(`XOS Dex: Stopped during waiting period for ${pair}.`, "swap");
           break;
         }
       }
@@ -1124,7 +1124,7 @@ async function runAutoSwap(pair, autoSwapFunction, lastSwapDirection) {
     mainMenu.setItems(getMainMenuItems());
     xosDexSubMenu.setItems(getXosDexMenuItems());
     safeRender();
-    addLog(`XOS Dex: Auto Swap untuk ${pair} selesai.`, "swap");
+    addLog(`XOS Dex: Auto swap for ${pair} completed.`, "swap");
   });
 }
 
@@ -1132,11 +1132,11 @@ function changeRandomAmount(pair) {
   const pairKey = pair.replace(" & ", "_");
   const token2 = pair.split(" & ")[1];
   promptBox.setFront();
-  promptBox.input(`Masukkan rentang random amount untuk XOS pada pasangan ${pair} (format: min,max, contoh: 0.1,0.5)`, "", (err, valueXos) => {
+  promptBox.input(`Enter random amount range for XOS on pair ${pair} (format: min,max, e.g., 0.1,0.5)`, "", (err, valueXos) => {
     promptBox.hide();
     safeRender();
     if (err || !valueXos) {
-      addLog(`Change Random Amount: Input untuk XOS pada ${pair} dibatalkan.`, "system");
+      addLog(`Change Random Amount: Input for XOS on ${pair} cancelled.`, "system");
       changeRandomAmountSubMenu.show();
       changeRandomAmountSubMenu.focus();
       safeRender();
@@ -1144,7 +1144,7 @@ function changeRandomAmount(pair) {
     }
     const [minXos, maxXos] = valueXos.split(",").map(v => parseFloat(v.trim()));
     if (isNaN(minXos) || isNaN(maxXos) || minXos <= 0 || maxXos <= minXos) {
-      addLog(`Change Random Amount: Input tidak valid untuk XOS pada ${pair}. Gunakan format min,max (contoh: 0.1,0.5) dengan min > 0 dan max > min.`, "error");
+      addLog(`Change Random Amount: Invalid input for XOS on ${pair}. Use format min,max (e.g., 0.1,0.5) with min > 0 and max > min.`, "error");
       changeRandomAmountSubMenu.show();
       changeRandomAmountSubMenu.focus();
       safeRender();
@@ -1152,11 +1152,11 @@ function changeRandomAmount(pair) {
     }
 
     promptBox.setFront();
-    promptBox.input(`Masukkan rentang random amount untuk ${token2} pada pasangan ${pair} (format: min,max, contoh: 0.1,0.5)`, "", (err, valueToken2) => {
+    promptBox.input(`Enter random amount range for ${token2} on pair ${pair} (format: min,max, e.g., 0.1,0.5)`, "", (err, valueToken2) => {
       promptBox.hide();
       safeRender();
       if (err || !valueToken2) {
-        addLog(`Change Random Amount: Input untuk ${token2} pada ${pair} dibatalkan.`, "system");
+        addLog(`Change Random Amount: Input for ${token2} on ${pair} cancelled.`, "system");
         changeRandomAmountSubMenu.show();
         changeRandomAmountSubMenu.focus();
         safeRender();
@@ -1164,7 +1164,7 @@ function changeRandomAmount(pair) {
       }
       const [minToken2, maxToken2] = valueToken2.split(",").map(v => parseFloat(v.trim()));
       if (isNaN(minToken2) || isNaN(maxToken2) || minToken2 <= 0 || maxToken2 <= minToken2) {
-        addLog(`Change Random Amount: Input tidak valid untuk ${token2} pada ${pair}. Gunakan format min,max (contoh: 0.1,0.5) dengan min > 0 dan max > min.`, "error");
+        addLog(`Change Random Amount: Invalid input for ${token2} on ${pair}. Use format min,max (e.g., 0.1,0.5) with min > 0 and max > min.`, "error");
         changeRandomAmountSubMenu.show();
         changeRandomAmountSubMenu.focus();
         safeRender();
@@ -1175,7 +1175,7 @@ function changeRandomAmount(pair) {
         XOS: { min: minXos, max: maxXos },
         [token2]: { min: minToken2, max: maxToken2 }
       };
-      addLog(`Change Random Amount: Random Amount ${pair} diubah menjadi XOS: ${minXos} - ${maxXos}, ${token2}: ${minToken2} - ${maxToken2}.`, "success");
+      addLog(`Change Random Amount: Random amount for ${pair} updated to XOS: ${minXos} - ${maxXos}, ${token2}: ${minToken2} - ${maxToken2}.`, "success");
       changeRandomAmountSubMenu.show();
       changeRandomAmountSubMenu.focus();
       safeRender();
@@ -1205,7 +1205,7 @@ const headerBox = blessed.box({
   style: { fg: "white", bg: "default" }
 });
 
-figlet.text("NT EXHAUST".toUpperCase(), { font: "ANSI Shadow" }, (err, data) => {
+figlet.text("ADB NODE".toUpperCase(), { font: "ANSI Shadow" }, (err, data) => {
   if (err) headerBox.setContent("{center}{bold}NT Exhaust{/bold}{/center}");
   else headerBox.setContent(`{center}{bold}{bright-cyan-fg}${data}{/bright-cyan-fg}{/bold}{/center}`);
   safeRender();
@@ -1235,11 +1235,11 @@ const logsBox = blessed.box({
 });
 
 const walletBox = blessed.box({
-  label: " Informasi Wallet ",
+  label: " Wallet Information ",
   border: { type: "line" },
   tags: true,
   style: { border: { fg: "magenta" }, fg: "white", bg: "default" },
-  content: "Loading data wallet..."
+  content: "Loading wallet data..."
 });
 
 const mainMenu = blessed.list({
@@ -1370,7 +1370,7 @@ mainMenu.on("select", (item) => {
   } else if (selected === "Stop Transaction") {
     if (swapRunning) {
       swapCancelled = true;
-      addLog("Stop Transaction: Transaksi swap akan dihentikan.", "system");
+      addLog("Stop Transaction: Swap transactions will be stopped.", "system");
     }
   } else if (selected === "Clear Transaction Logs") {
     clearTransactionLogs();
@@ -1387,31 +1387,31 @@ xosDexSubMenu.on("select", (item) => {
   const selected = item.getText();
   if (selected === "Auto Swap XOS & WXOS") {
     if (swapRunning) {
-      addLog("Transaksi XOS Dex sedang berjalan. Hentikan transaksi terlebih dahulu.", "warning");
+      addLog("XOS Dex transaction is already running. Stop the transaction first.", "warning");
     } else {
       runAutoSwap("XOS & WXOS", autoSwapXosWxos, lastSwapDirectionXosWxos);
     }
   } else if (selected === "Auto Swap XOS & USDC") {
     if (swapRunning) {
-      addLog("Transaksi XOS Dex sedang berjalan. Hentikan transaksi terlebih dahulu.", "warning");
+      addLog("XOS Dex transaction is already running. Stop the transaction first.", "warning");
     } else {
       runAutoSwap("XOS & USDC", autoSwapXosUsdc, lastSwapDirectionXosUsdc);
     }
   } else if (selected === "Auto Swap XOS & BNB") {
     if (swapRunning) {
-      addLog("Transaksi XOS Dex sedang berjalan. Hentikan transaksi terlebih dahulu.", "warning");
+      addLog("XOS Dex transaction is already running. Stop the transaction first.", "warning");
     } else {
       runAutoSwap("XOS & BNB", autoSwapXosBnb, lastSwapDirectionXosBnb);
     }
   } else if (selected === "Auto Swap XOS & SOL") {
     if (swapRunning) {
-      addLog("Transaksi XOS Dex sedang berjalan. Hentikan transaksi terlebih dahulu.", "warning");
+      addLog("XOS Dex transaction is already running. Stop the transaction first.", "warning");
     } else {
       runAutoSwap("XOS & SOL", autoSwapXosSol, lastSwapDirectionXosSol);
     }
   } else if (selected === "Auto Swap XOS & JUP") {
     if (swapRunning) {
-      addLog("Transaksi XOS Dex sedang berjalan. Hentikan transaksi terlebih dahulu.", "warning");
+      addLog("XOS Dex transaction is already running. Stop the transaction first.", "warning");
     } else {
       runAutoSwap("XOS & JUP", autoSwapXosJup, lastSwapDirectionXosJup);
     }
@@ -1423,9 +1423,9 @@ xosDexSubMenu.on("select", (item) => {
   } else if (selected === "Stop Transaction") {
     if (swapRunning) {
       swapCancelled = true;
-      addLog("XOS Dex: Perintah Stop Transaction diterima.", "swap");
+      addLog("XOS Dex: Stop transaction command received.", "swap");
     } else {
-      addLog("XOS Dex: Tidak ada transaksi yang berjalan.", "swap");
+      addLog("XOS Dex: No transaction is currently running.", "swap");
     }
   } else if (selected === "Clear Transaction Logs") {
     clearTransactionLogs();
@@ -1467,5 +1467,5 @@ screen.key(["C-down"], () => { logsBox.scroll(1); safeRender(); });
 
 safeRender();
 mainMenu.focus();
-addLog("Dont Forget To Subscribe YT And Telegram @NTExhaust!!", "system");
+addLog("Don't forget to subscribe to YouTube and Telegram @NTExhaust!", "system");
 updateWalletData();
