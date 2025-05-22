@@ -756,7 +756,7 @@ async function autoSwapXosSol() {
       }
       const approveTxFunction = async (nonce) => {
         approveTxParams.nonce = nonce;
-        const tx = await wxosContract.approve(SW trouvées, amountWei, approveTxParams);
+        const tx = await wxosContract.approve(SWAP_ROUTER_ADDRESS, amountWei, approveTxParams);
         addLog(`Approval transaction sent for WXOS`, "swap");
         return tx;
       };
