@@ -1467,5 +1467,5 @@ screen.key(["C-down"], () => { logsBox.scroll(1); safeRender(); });
 
 safeRender();
 mainMenu.focus();
-addLog("Don't forget to subscribe to YouTube and Telegram @NTExhaust!", "system");
+addLog("Don't forget to subscribe to YouTube and Telegram @airdropbombnode!", "system");
 updateWalletData();
