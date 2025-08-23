@@ -116,7 +116,7 @@ class XOS:
                 ]
             }
         ]
-        self.REF_CODE = "1V7NKQ" # U can change it with yours.
+        self.REF_CODE = "WEYFVP" # U can change it with yours.
         self.HEADERS = {}
         self.proxies = []
         self.proxy_index = 0
@@ -1656,3 +1656,4 @@ if __name__ == "__main__":
             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
             f"{Fore.RED + Style.BRIGHT}[ EXIT ] XOS Testnet - BOT{Style.RESET_ALL}                                       "                              
         )
+
